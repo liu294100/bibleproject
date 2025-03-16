@@ -4,16 +4,9 @@ import BibleChapterNavigation from '@/components/BibleChapterNavigation';
 import AudioPlayer from '@/components/AudioPlayer';
 import ShareButtons from '@/components/ShareButtons';
 import { getBookByNumber } from '@/lib/bible-data';
+import { getBibleChapterText } from '@/lib/bible-text-data';
 
-interface BibleChapterPageProps {
-  params: {
-    book: string;
-    chapter: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-const BibleChapterPage = ({ params }: BibleChapterPageProps) => {
+export default function BibleChapterPage({ params }: { params: { book: string; chapter: string } }) {
   const book = getBookByNumber(params.book);
   if (!book) return <div>书卷不存在</div>;
 
@@ -40,7 +33,29 @@ const BibleChapterPage = ({ params }: BibleChapterPageProps) => {
 
       <div className="textBody">
         <h3 className="text-xl font-semibold my-4">第{params.chapter}章</h3>
-        {/* 经文内容将通过API或数据文件加载 */}
+        {
+          (() => {
+            const bibleText = getBibleChapterText(params.book, chapterNum);
+            if (!bibleText) {
+              return <p>暂无经文内容</p>;
+            }
+            
+            return (
+              <p>
+                {bibleText.verses.map((verse) => (
+                  <React.Fragment key={verse.verse}>
+                    {verse.verse === 1 ? '' : <br />}
+                    <span className="verse" id={verse.verse.toString()}>{verse.verse} </span>
+                    {verse.isJesusWords ? 
+                      <span className="word">{verse.text}</span> : 
+                      verse.text
+                    }
+                  </React.Fragment>
+                ))}
+              </p>
+            );
+          })()
+        }
       </div>
 
       <div className="ym-wrapper mt-8">
@@ -51,5 +66,3 @@ const BibleChapterPage = ({ params }: BibleChapterPageProps) => {
     </div>
   );
 };
-
-export default BibleChapterPage;
