@@ -6,9 +6,14 @@ import ShareButtons from '@/components/ShareButtons';
 import { getBookByNumber } from '@/lib/bible-data';
 import { getBibleChapterText } from '@/lib/bible-text-data';
 
-type PageParams = { book: string; chapter: string };
+type Params = {
+  book: string;
+  chapter: string;
+};
 
-export default function BibleChapterPage({ params }: { params: PageParams }) {
+export default async function BibleChapterPage(
+  { params }: { params: Params & Promise<Params> }
+) {
   const book = getBookByNumber(params.book);
   if (!book) return <div>书卷不存在</div>;
 

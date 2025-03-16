@@ -100,7 +100,7 @@ const fetchVerseData = async (
 
         const data = await response.json();
         // 将API返回的数据格式转换为内部使用的格式
-        const verses = {};
+        const verses: { [key: string]: string } = {};
         if (data.text) {
           verses['1'] = data.text;
         } else if (data.verses) {
@@ -111,7 +111,8 @@ const fetchVerseData = async (
         return { version, data: { verses }, source: 'api' };
       } catch (error) {
         console.warn(`API请求失败，正在尝试使用本地数据: ${error}`);
-        errors.push(`${version}: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push(`${version}: ${errorMessage}`);
         // 尝试使用本地数据作为备选
         const localData = getLocalVerseData(bookId, chapterNum, version);
         return { version, data: localData, source: 'local' };
