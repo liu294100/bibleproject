@@ -10,6 +10,7 @@ interface BibleChapterPageProps {
     book: string;
     chapter: string;
   };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 const BibleChapterPage = ({ params }: BibleChapterPageProps) => {
