@@ -14,10 +14,11 @@ type Params = {
 export default async function BibleChapterPage(
   { params }: { params: Params & Promise<Params> }
 ) {
-  const book = getBookByNumber(params.book);
+  const resolvedParams = await params;
+  const book = getBookByNumber(resolvedParams.book);
   if (!book) return <div>书卷不存在</div>;
 
-  const chapterNum = parseInt(params.chapter);
+  const chapterNum = parseInt(resolvedParams.chapter);
   if (isNaN(chapterNum) || chapterNum < 1 || chapterNum > book.chapters) {
     return <div>章节不存在</div>;
   }
@@ -29,21 +30,21 @@ export default async function BibleChapterPage(
         <BibleChapterNavigation
           bookChapters={book.chapters}
           currentChapter={chapterNum}
-          bookPath={`/bibles/gb/${params.book}`}
+          bookPath={`/bibles/gb/${resolvedParams.book}`}
         />
       </div>
 
       <AudioPlayer
-        audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${params.book}/${params.chapter}.mp3`}
-        title={`${book.name} ${params.chapter} 章 [Mandarin]`}
+        audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${resolvedParams.book}/${resolvedParams.chapter}.mp3`}
+        title={`${book.name} ${resolvedParams.chapter} 章 [Mandarin]`}
       />
 
       <div className="textBody">
-        <h3 className="text-xl font-semibold my-4">第{params.chapter}章</h3>
+        <h3 className="text-xl font-semibold my-4">第{resolvedParams.chapter}章</h3>
         {
-          (() => {
-            const bibleText = getBibleChapterText(params.book, chapterNum);
-            if (!bibleText) {
+          (async () => {
+            const bibleText = await getBibleChapterText(resolvedParams.book, chapterNum);
+            if (!bibleText || !bibleText.verses) {
               return <p>暂无经文内容</p>;
             }
             
@@ -67,7 +68,7 @@ export default async function BibleChapterPage(
 
       <div className="ym-wrapper mt-8">
         <div className="ym-wbox">
-          <ShareButtons pageTitle={`${book.name} - 第${params.chapter}章`} />
+          <ShareButtons pageTitle={`${book.name} - 第${resolvedParams.chapter}章`} />
         </div>
       </div>
     </div>

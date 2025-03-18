@@ -132,9 +132,10 @@ const AudioBiblePlayer: React.FC<AudioBiblePlayerProps> = ({
 
   // Effect to pause audio when component unmounts
   useEffect(() => {
+    const audio = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (audio) {
+        audio.pause();
       }
     };
   }, []);

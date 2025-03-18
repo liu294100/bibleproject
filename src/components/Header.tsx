@@ -7,8 +7,8 @@ const Header = () => {
       <div id="mytop" className="ym-wrapper">
         <div className="ym-wbox" style={{ backgroundColor: "#b1343c", padding: "0.5rem 1rem" }}>
           <span className="wp">
-            <strong><Link className="wplink" href="/">Apo </Link></strong>
-            <Link className="wplink" href="/"><em>Project</em></Link>
+            <strong><Link className="wplink" href="/">Apollo‘s Open Source </Link></strong>
+            <Link className="wplink" href="/"><em> Project</em></Link>
           </span>
         </div>
       </div>

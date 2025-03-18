@@ -280,8 +280,8 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
           <p className="mt-2">加载中...</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-          <h2 className="text-xl font-bold mb-4 sticky top-0 bg-white dark:bg-gray-900 py-2 z-10">
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4 bg-white dark:bg-gray-900 py-2 z-10">
             {getBookByNumber(book)?.name || '未知书卷'} {chapter}
           </h2>
 
