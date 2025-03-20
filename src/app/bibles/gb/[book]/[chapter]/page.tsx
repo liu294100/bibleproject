@@ -35,7 +35,7 @@ export default async function BibleChapterPage(
       </div>
 
       <AudioPlayer
-        audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${resolvedParams.book}/${resolvedParams.chapter}.mp3`}
+        audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${parseInt(resolvedParams.book)}/${resolvedParams.chapter}.mp3`}
         title={`${book.name} ${resolvedParams.chapter} 章 [Mandarin]`}
       />
 
