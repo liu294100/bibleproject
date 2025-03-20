@@ -32,8 +32,10 @@ const AudioBiblePlayer: React.FC<AudioBiblePlayerProps> = ({
   // Construct audio URL based on language, book, and chapter
   const getAudioUrl = () => {
     const languageCode = languageCodes[language] || '4';
-    return `http://audio2.abiblica.org/bibles/app/audio/${languageCode}/${book}/${chapter}.mp3`;
+    return `http://audio2.abiblica.org/bibles/app/audio/${languageCode}/${parseInt(book)}/${chapter}.mp3`;
   };
+
+
 
   // Update max chapters when book changes
   useEffect(() => {
