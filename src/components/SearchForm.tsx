@@ -21,30 +21,50 @@ const SearchForm = () => {
     setLoading(true);
     setSearched(true);
 
-    // Determine if the query is a Bible reference or keywords
+    // 判断是否为经文引用
     const isBibleReference = checkIfBibleReference(searchQuery);
-
     try {
       if (isBibleReference) {
-        // Handle Bible reference search
+        // 处理经文引用搜索
         const { book, chapter, verse } = parseBibleReference(searchQuery);
         if (book && chapter) {
-          // Find matching book
-          const bibleBook = findBookByName(book);
-          if (bibleBook) {
-            const bookNumber = bibleBook.number;
-            const url = verse
-              ? `/bibles/${version}/${bookNumber}/${chapter}#${verse}`
-              : `/bibles/${version}/${bookNumber}/${chapter}`;
-
-            router.push(url);
-            return;
+          // 直接请求API获取经文内容
+          const ref = verse ? `${book}${chapter}:${verse}` : `${book}${chapter}`;
+          const apiUrl = `https://api.biblesupersearch.com/api?bible=ckjv_sdt&reference=${encodeURIComponent(ref)}`;
+          const response = await fetch(apiUrl);
+          const data = await response.json();
+          if (data && data.results && Array.isArray(data.results)) {
+            // 解析复杂 JSON 结构，提取所有经文
+            const parsedResults = [];
+            data.results.forEach((result: any, idx: number) => {
+              const bookName = result.book_name || '';
+              const chapterVerse = result.chapter_verse || '';
+              const bookNumber = result.book_id ? result.book_id.toString() : '';
+              // 处理 verses 下所有经文
+              const versesObj = result.verses && result.verses.ckjv_sdt ? result.verses.ckjv_sdt : {};
+              Object.keys(versesObj).forEach(chapterKey => {
+                const chapterData = versesObj[chapterKey];
+                Object.keys(chapterData).forEach(verseKey => {
+                  const verseData = chapterData[verseKey];
+                  parsedResults.push({
+                    id: verseData.id || `${bookNumber}_${chapterKey}_${verseKey}`,
+                    reference: `${bookName} ${chapterKey}:${verseKey}`,
+                    text: verseData.text || '',
+                    url: `/bibles/${version}/${bookNumber}/${chapterKey}#${verseKey}`
+                  });
+                });
+              });
+            });
+            setResults(parsedResults);
+          } else {
+            setResults([]);
           }
+          setLoading(false);
+          return;
         }
       }
 
-      // Simulate search results for keywords
-      // In a real implementation, this would call an API or search a database
+      // 关键词搜索（mock）
       const mockResults = generateMockSearchResults(searchQuery);
       setResults(mockResults);
     } catch (error) {
@@ -278,7 +298,7 @@ const mockVerses = [
   {
     id: '10',
     reference: '约翰福音 14:6',
-    text: '耶稣说我就是道路、真理、生命；若不借着我，没有人能到父那里去。',
+    text: '耶稣said I am the way, the truth, the life; if not me, no one can go to father.',
     url: '/bibles/gb/43/14#6'
   },
   {
@@ -296,7 +316,7 @@ const mockVerses = [
   {
     id: '13',
     reference: '罗马书 8:28',
-    text: '我们晓得万事都互相效力，叫爱神的人得益处，就是按他旨意被召的人。',
+    text: '我们晓得万事都互相效力，叫爱神的人受益，就是按他旨意被召的人。',
     url: '/bibles/gb/45/8#28'
   },
   {

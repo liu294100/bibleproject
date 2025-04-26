@@ -80,8 +80,8 @@ async function fetchBibleChapter(bookId: string, chapterNumber: number, maxRetri
 // 动态导入本地数据
 async function importLocalChapter(bookId: string, chapterNumber: number): Promise<BibleChapter | null> {
   try {
-    const { [bookId.toLowerCase() + chapterNumber]: chapterData } = await import(`./bible-text-data/${bookId.toLowerCase()}${chapterNumber}`);
-    return chapterData || null;
+    const module = await import(`./bible-text-data/${bookId.toLowerCase()}${chapterNumber}`);
+    return module[`${bookId.toLowerCase()}${chapterNumber}`];
   } catch (error) {
     return null;
   }

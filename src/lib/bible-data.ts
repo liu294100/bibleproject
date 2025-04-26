@@ -78,6 +78,21 @@ export const bibleBooks: BibleBook[] = [
   { number: '66', name: '启示录', chapters: 22 }
 ];
 
+// Supported Bible versions
+export const availableVersions = [
+  { code: 'chinese', label: '中文' },
+  { code: 'english', label: 'English' },
+  { code: 'french', label: 'Français' },
+  { code: 'spanish', label: 'Español' },
+  { code: 'german', label: 'Deutsch' },
+  { code: 'arabic', label: 'العربية' },
+  { code: 'russian', label: 'Русский' },
+  { code: 'italian', label: 'Italiano' },
+  { code: 'portuguese', label: 'Português' },
+  { code: 'japanese', label: '日本語' },
+  { code: 'korean', label: '한국어' },
+];
+
 // Common Bible verses for quick references
 export const commonVerses = [
   { reference: '约翰福音 3:16', book: '43', chapter: 3, verse: 16 },
