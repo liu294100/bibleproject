@@ -6,11 +6,24 @@ import Link from 'next/link';
 import { bibleBooks } from '@/lib/bible-data';
 
 // Types
+interface VerseData {
+  id?: string;
+  text: string;
+}
+
 interface SearchResult {
   id: string;
   reference: string;
   text: string;
   url: string;
+  book_name?: string;
+  book_id?: string | number;
+  verses?: {
+    ckjv_sdt?: Record<string, Record<string, {
+      id?: string;
+      text: string;
+    }>>;
+  };
 }
 
 // Mock data
@@ -112,15 +125,15 @@ const SearchForm = () => {
         // 解析所有 verse
         const parsedResults: SearchResult[] = [];
   
-        data.results.forEach((result: any) => {
+        data.results.forEach((result: SearchResult) => {
           const bookName = result.book_name || '';
           const bookNumber = result.book_id?.toString() || '';
           const versesObj = isReference
             ? result.verses?.ckjv_sdt || {}
             : result.verses?.ckjv_sdt || {};
   
-          Object.entries(versesObj).forEach(([chapKey, chapData]: any) => {
-            Object.entries(chapData).forEach(([verseKey, verseData]: any) => {
+          Object.entries(versesObj).forEach(([chapKey, chapData]: [string, Record<string, VerseData>]) => {
+            Object.entries(chapData).forEach(([verseKey, verseData]: [string, VerseData]) => {
               parsedResults.push({
                 id: verseData.id || `${bookNumber}_${chapKey}_${verseKey}`,
                 reference: `${bookName} ${chapKey}:${verseKey}`,
