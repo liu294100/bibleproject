@@ -123,7 +123,7 @@ const SearchForm = () => {
     const isReference = checkIfBibleReference(searchQuery);
     
     try {
-      let allResults: SearchResult[] = [];
+      const allResults: SearchResult[] = [];
       
       if (isReference) {
         // 经文引用 - 尝试简繁转换
