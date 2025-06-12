@@ -26,7 +26,7 @@ const Navigation = () => {
             </li>
             <li>
               <Link
-                href="/bibles/gb/43/1"
+                href="/bibles/"
                 className={`px-2 py-1 hover:text-gray-300 ${isActive('/bibles') ? 'bg-red-600 rounded' : ''}`}
               >
                 圣经

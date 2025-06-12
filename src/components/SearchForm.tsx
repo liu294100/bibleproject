@@ -4,6 +4,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { bibleBooks } from '@/lib/bible-data';
+import { Converter } from 'opencc-js';
+
+// Initialize OpenCC converters
+const simplifiedToTraditional = Converter({ from: 'cn', to: 'tw' });
+const traditionalToSimplified = Converter({ from: 'tw', to: 'cn' });
+
+
+
+// 简繁转换函数 - using OpenCC
+const convertText = (text: string, direction: 'toTraditional' | 'toSimplified'): string => {
+  if (direction === 'toTraditional') {
+    return simplifiedToTraditional(text);
+  } else {
+    return traditionalToSimplified(text);
+  }
+};
 
 // Types
 interface VerseData {
@@ -105,49 +121,120 @@ const SearchForm = () => {
     setSearched(true);
   
     const isReference = checkIfBibleReference(searchQuery);
-    let apiUrl: string;
-  
-    if (isReference) {
-      // 经文引用
-      const { book, chapter, verse } = parseBibleReference(searchQuery);
-      const ref = verse ? `${book}${chapter}:${verse}` : `${book}${chapter}`;
-      apiUrl = `https://api.biblesupersearch.com/api?bible=ckjv_sdt&reference=${encodeURIComponent(ref)}`;
-    } else {
-      // 关键词搜索
-      apiUrl = `https://api.biblesupersearch.com/api?bible=ckjv_sdt&search=${encodeURIComponent(searchQuery)}`;
-    }
-  
+    
     try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-  
-      if (data?.results?.length) {
-        // 解析所有 verse
-        const parsedResults: SearchResult[] = [];
-  
-        data.results.forEach((result: SearchResult) => {
-          const bookName = result.book_name || '';
-          const bookNumber = result.book_id?.toString() || '';
-          const versesObj = isReference
-            ? result.verses?.ckjv_sdt || {}
-            : result.verses?.ckjv_sdt || {};
-  
-          Object.entries(versesObj).forEach(([chapKey, chapData]: [string, Record<string, VerseData>]) => {
-            Object.entries(chapData).forEach(([verseKey, verseData]: [string, VerseData]) => {
-              parsedResults.push({
-                id: verseData.id || `${bookNumber}_${chapKey}_${verseKey}`,
-                reference: `${bookName} ${chapKey}:${verseKey}`,
-                text: verseData.text || '',
-                url: `/bibles/${version}/${bookNumber}/${chapKey}#${verseKey}`,
+      let allResults: SearchResult[] = [];
+      
+      if (isReference) {
+        // 经文引用 - 尝试简繁转换
+        const { book, chapter, verse } = parseBibleReference(searchQuery);
+        
+        // 尝试原始书名、简体转繁体、繁体转简体
+        const bookVariations = [
+          book,
+          convertText(book, 'toTraditional'),
+          convertText(book, 'toSimplified')
+        ];
+        
+        // 去重
+        const uniqueBooks = Array.from(new Set(bookVariations));
+        
+        for (const bookName of uniqueBooks) {
+          const ref = verse ? `${bookName}${chapter}:${verse}` : `${bookName}${chapter}`;
+          const apiUrl = `https://api.biblesupersearch.com/api?bible=ckjv_sdt&reference=${encodeURIComponent(ref)}`;
+          
+          try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            
+            if (data?.results?.length) {
+              data.results.forEach((result: SearchResult) => {
+                const resultBookName = result.book_name || '';
+                const bookNumber = result.book_id?.toString() || '';
+                const versesObj = result.verses?.ckjv_sdt || {};
+        
+                Object.entries(versesObj).forEach(([chapKey, chapData]: [string, Record<string, VerseData>]) => {
+                  Object.entries(chapData).forEach(([verseKey, verseData]: [string, VerseData]) => {
+                    const resultId = verseData.id || `${bookNumber}_${chapKey}_${verseKey}`;
+                    // 避免重复结果
+                    if (!allResults.find(r => r.id === resultId)) {
+                      allResults.push({
+                        id: resultId,
+                        reference: `${resultBookName} ${chapKey}:${verseKey}`,
+                        text: verseData.text || '',
+                        url: `/bibles/${version}/${bookNumber}/${chapKey}#${verseKey}`,
+                      });
+                    }
+                  });
+                });
               });
-            });
+              break; // 找到结果就停止尝试其他变体
+            }
+          } catch (error) {
+            console.warn(`Failed to search with book name: ${bookName}`, error);
+          }
+        }
+      } else {
+        // 关键词搜索 - 使用简繁转换
+        const originalQuery = searchQuery.trim();
+        const traditionalQuery = convertText(originalQuery, 'toTraditional');
+          const simplifiedQuery = convertText(originalQuery, 'toSimplified');
+        
+        // 创建唯一查询集合
+        const queries = Array.from(new Set([originalQuery, traditionalQuery, simplifiedQuery]));
+        
+        // 并行搜索所有查询变体
+        const searchPromises = queries.map(async (query) => {
+          const apiUrl = `https://api.biblesupersearch.com/api?bible=ckjv_sdt&search=${encodeURIComponent(query)}`;
+          
+          try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            
+            if (data?.results?.length) {
+              const results: SearchResult[] = [];
+              
+              data.results.forEach((result: SearchResult) => {
+                const bookName = result.book_name || '';
+                const bookNumber = result.book_id?.toString() || '';
+                const versesObj = result.verses?.ckjv_sdt || {};
+        
+                Object.entries(versesObj).forEach(([chapKey, chapData]: [string, Record<string, VerseData>]) => {
+                  Object.entries(chapData).forEach(([verseKey, verseData]: [string, VerseData]) => {
+                    results.push({
+                      id: verseData.id || `${bookNumber}_${chapKey}_${verseKey}`,
+                      reference: `${bookName} ${chapKey}:${verseKey}`,
+                      text: verseData.text || '',
+                      url: `/bibles/${version}/${bookNumber}/${chapKey}#${verseKey}`,
+                    });
+                  });
+                });
+              });
+              
+              return results;
+            }
+          } catch (error) {
+            console.warn(`Failed to search with query: ${query}`, error);
+          }
+          
+          return [];
+        });
+        
+        const searchResults = await Promise.all(searchPromises);
+        
+        // 合并并去重结果
+        const seenIds = new Set<string>();
+        searchResults.forEach(results => {
+          results.forEach(result => {
+            if (!seenIds.has(result.id)) {
+              seenIds.add(result.id);
+              allResults.push(result);
+            }
           });
         });
-  
-        setResults(parsedResults);
-      } else {
-        setResults([]);
       }
+      
+      setResults(allResults);
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);
