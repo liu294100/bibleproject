@@ -24,9 +24,18 @@ export default async function BibleChapterPage(
   }
 
   return (
-    <div className="textOptions">
+    <div className="textOptions page-shell">
       <div className="textHeader">
-        <h1 className="text-2xl font-bold mb-4">{book.name}</h1>
+        <span className="feature-stat mb-4">章节阅读</span>
+        <div className="section-heading mb-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{book.name}</h1>
+            <p className="faded">当前阅读第 {resolvedParams.chapter} 章，可切换章节并播放音频。</p>
+          </div>
+          <Link href="/bibles" className="text-red-600 hover:text-red-700 font-medium">
+            返回目录
+          </Link>
+        </div>
         <BibleChapterNavigation
           bookChapters={book.chapters}
           currentChapter={chapterNum}
@@ -34,13 +43,18 @@ export default async function BibleChapterPage(
         />
       </div>
 
-      <AudioPlayer
-        audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${parseInt(resolvedParams.book)}/${resolvedParams.chapter}.mp3`}
-        title={`${book.name} ${resolvedParams.chapter} 章 [Mandarin]`}
-      />
+      <section className="panel-card p-4 md:p-6">
+        <AudioPlayer
+          audioUrl={`http://audio2.abiblica.org/bibles/app/audio/4/${parseInt(resolvedParams.book)}/${resolvedParams.chapter}.mp3`}
+          title={`${book.name} ${resolvedParams.chapter} 章 [Mandarin]`}
+        />
+      </section>
 
-      <div className="textBody">
-        <h3 className="text-xl font-semibold my-4">第{resolvedParams.chapter}章</h3>
+      <section className="panel-card p-6 md:p-8">
+        <div className="reader-heading">
+          <h2 className="text-2xl font-semibold">第{resolvedParams.chapter}章</h2>
+          <p className="faded">经文内容保持不变，仅优化阅读版式与移动端排版。</p>
+        </div>
         {
           (async () => {
             const bibleText = await getBibleChapterText(resolvedParams.book, chapterNum);
@@ -49,28 +63,29 @@ export default async function BibleChapterPage(
             }
             
             return (
-              <p>
+              <div className="textBody reader-body">
                 {bibleText.verses.map((verse) => (
                   <React.Fragment key={verse.verse}>
-                    {verse.verse === 1 ? '' : <br />}
+                    <p className="reader-verse" key={verse.verse}>
                     <span className="verse" id={verse.verse.toString()}>{verse.verse} </span>
                     {verse.isJesusWords ? 
                       <span className="word">{verse.text}</span> : 
                       verse.text
                     }
+                    </p>
                   </React.Fragment>
                 ))}
-              </p>
+              </div>
             );
           })()
         }
-      </div>
+      </section>
 
-      <div className="ym-wrapper mt-8">
+      <section className="panel-card p-4 md:p-5">
         <div className="ym-wbox">
           <ShareButtons pageTitle={`${book.name} - 第${resolvedParams.chapter}章`} />
         </div>
-      </div>
+      </section>
     </div>
   );
 };

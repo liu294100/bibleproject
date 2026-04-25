@@ -27,9 +27,15 @@ const BibleChapterNavigation: React.FC<BibleChapterNavigationProps> = ({
   }
 
   return (
-    <p className="ym-noprint">
-      {chapters}
-    </p>
+    <div className="ym-noprint chapter-nav">
+      <div className="chapter-nav-header">
+        <span className="feature-stat">章节导航</span>
+        <span className="faded text-sm">共 {bookChapters} 章</span>
+      </div>
+      <div className="chapter-nav-list">
+        {chapters}
+      </div>
+    </div>
   );
 };
 

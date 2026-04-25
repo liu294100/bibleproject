@@ -1,29 +1,29 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { bibleBooks, getBookByNumber, BibleBook } from '@/lib/bible-data';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { bibleBooks, getBookByNumber } from '@/lib/bible-data';
+import { useLocale } from '@/components/LocaleProvider';
 
 interface ParallelBibleViewProps {
   initialBook?: string;
   initialChapter?: number;
 }
 
-const getEnglishBookName = (bookId: string): string => {
-  const englishNames: {[key: string]: string} = {
-    '01': 'Genesis',
-    '19': 'Psalms',
-    '40': 'Matthew',
-    '43': 'John',
-    '45': 'Romans',
-    '49': 'Ephesians'
-  };
-
-  return englishNames[bookId] || 'Unknown Book';
-};
-
 // 本地圣经数据（作为API不可用时的备选方案）
 const localBibleData: { [key: string]: { [key: string]: { [key: string]: string } } } = {
+  'cuv': {
+    '40': {
+      '1': '虚心的人有福了，因为天国是他们的。',
+      '2': '哀恸的人有福了，因为他们必得安慰。',
+      '3': '温柔的人有福了，因为他们必承受地土。'
+    },
+    '43': {
+      '1': '太初有道，道与神同在，道就是神。',
+      '2': '这道太初与神同在。',
+      '3': '万物是借着他造的；凡被造的，没有一样不是借着他造的。'
+    }
+  },
   'gb': {
     '43': {
       '1': '太初有道，道与神同在，道就是神。',
@@ -59,11 +59,6 @@ const getStandardBookId = (bookId: string): string => {
     '43': 'JHN', '45': 'ROM', '49': 'EPH'
   };
   return bookIdMap[bookId] || 'JHN';
-};
-
-// 获取API版本ID
-const getApiVersionId = (version: string): string => {
-  return version; // 直接使用API提供的版本标识符
 };
 
 // Fetch verse data from bible-api.com with fallback to local data
@@ -148,28 +143,16 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
   initialBook,
   initialChapter
 }) => {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLocale();
   const [book, setBook] = useState(searchParams.get('book') || initialBook || '43');
   const [chapter, setChapter] = useState(Number(searchParams.get('chapter') || initialChapter || 1));
   const [versions, setVersions] = useState<string[]>(['cuv', 'kjv', 'web']);
   const [maxChapters, setMaxChapters] = useState(21); // Default to John's Gospel
   const [verseData, setVerseData] = useState<ParallelVerseData>({});
   const [loading, setLoading] = useState(false);
-
-  // Helper to get a verse count for a book and chapter
-  const getVerseCount = useCallback((bookId: string, chapterNum: number): number => {
-    // This is simplified for the demo - real data would have actual verse counts
-    const verseCounts: {[key: string]: {[key: number]: number}} = {
-      '01': { 1: 31, 2: 25, 3: 24 }, // Genesis sample
-      '19': { 23: 6 }, // Psalm 23
-      '43': { 1: 51, 3: 36 }, // John sample
-      '45': { 8: 39 } // Romans 8 sample
-    };
-
-    return (bookId in verseCounts && chapterNum in verseCounts[bookId])
-      ? verseCounts[bookId][chapterNum]
-      : 30; // Default verse count for demo
-  }, []);
+  const hasVerses = Object.keys(verseData).length > 0;
 
   // Memoize loadParallelTexts function to maintain stable reference
   const loadParallelTexts = useCallback(async () => {
@@ -184,6 +167,19 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
       setLoading(false);
     }
   }, [book, chapter, versions]);
+
+  useEffect(() => {
+    const nextBook = searchParams.get('book') || initialBook || '43';
+    const nextChapter = Number(searchParams.get('chapter') || initialChapter || 1);
+
+    if (nextBook !== book) {
+      setBook(nextBook);
+    }
+
+    if (!Number.isNaN(nextChapter) && nextChapter !== chapter) {
+      setChapter(nextChapter);
+    }
+  }, [searchParams, initialBook, initialChapter, book, chapter]);
 
   // Update max chapters when book changes
   useEffect(() => {
@@ -223,15 +219,31 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
     }
   };
 
+  const handleBookChange = (nextBook: string) => {
+    const selectedBook = bibleBooks.find((item) => item.number === nextBook);
+    const nextChapter = selectedBook ? Math.min(chapter, selectedBook.chapters) : chapter;
+    setBook(nextBook);
+    setChapter(nextChapter);
+    router.replace(`/parallel?book=${nextBook}&chapter=${nextChapter}`, { scroll: false });
+  };
+
+  const handleChapterChange = (nextChapter: number) => {
+    setChapter(nextChapter);
+    router.replace(`/parallel?book=${book}&chapter=${nextChapter}`, { scroll: false });
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">圣经书卷</label>
+    <div className="page-shell">
+      <div className="page-grid xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="panel-card-soft p-4 md:p-5">
+          <h2 className="text-xl font-semibold mb-4">{t('选择经文', 'Choose Passage')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+          <label className="block text-sm font-medium mb-2">{t('圣经书卷', 'Book')}</label>
           <select
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700"
             value={book}
-            onChange={(e) => setBook(e.target.value)}
+            onChange={(e) => handleBookChange(e.target.value)}
           >
             {bibleBooks.map((book) => (
               <option key={book.number} value={book.number}>
@@ -239,13 +251,13 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">章节</label>
+            </div>
+            <div>
+          <label className="block text-sm font-medium mb-2">{t('章节', 'Chapter')}</label>
           <select
-            className="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-700"
+            className="w-full p-3 border rounded-xl dark:bg-gray-800 dark:border-gray-700"
             value={chapter}
-            onChange={(e) => setChapter(parseInt(e.target.value))}
+            onChange={(e) => handleChapterChange(parseInt(e.target.value))}
           >
             {getChapterOptions().map((chapterNum) => (
               <option key={chapterNum} value={chapterNum}>
@@ -253,50 +265,66 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
               </option>
             ))}
           </select>
+            </div>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">选择版本</label>
+
+        <div className="panel-card-soft p-4 md:p-5">
+          <label className="block text-sm font-medium mb-2">{t('选择版本', 'Versions')}</label>
           <div className="flex flex-wrap gap-2">
             {availableVersions.map((version) => (
               <button
+                type="button"
                 key={version.code}
                 onClick={() => toggleVersion(version.code)}
-                className={`px-2 py-1 text-sm rounded ${
+                className={`px-3 py-2 text-sm rounded-full transition-colors ${
                   versions.includes(version.code)
                     ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 {version.label}
               </button>
             ))}
           </div>
+          <p className="mt-4 text-sm faded">{t(`至少保留一个版本，当前共选择 ${versions.length} 个版本。`, `Keep at least one version selected. ${versions.length} selected.`)}</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-16">
+        <div className="panel-card-soft text-center py-16">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
-          <p className="mt-2">加载中...</p>
+          <p className="mt-2">{t('加载中...', 'Loading...')}</p>
         </div>
       ) : (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4 bg-white dark:bg-gray-900 py-2 z-10">
+        <div className="panel-card-soft p-4 md:p-5">
+          <div className="section-heading mb-4">
+            <h2 className="text-xl font-bold">
             {getBookByNumber(book)?.name || '未知书卷'} {chapter}
-          </h2>
+            </h2>
+            <p>{t('按节分组显示所选译本，移动端会纵向排列。', 'Selected versions are grouped by verse and stacked on mobile.')}</p>
+          </div>
 
+          {!hasVerses ? (
+            <div className="parallel-empty-state">
+              <h3 className="text-lg font-semibold mb-2">{t('当前章节暂无可用对照内容', 'No parallel content is available for this chapter')}</h3>
+              <p className="faded">
+                {t('可尝试切换到其他章节，或只保留英文版本查看。部分中文对照内容依赖外部接口，可能暂时不可用。', 'Try another chapter or keep only English versions selected. Some Chinese parallel content depends on external APIs and may be temporarily unavailable.')}
+              </p>
+            </div>
+          ) : (
           <div className="space-y-4">
             {Object.keys(verseData).map(verseNum => (
-              <div key={verseNum} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <h3 className="font-semibold text-red-600 mb-3">{verseNum}节</h3>
-                <div className="grid grid-cols-1 gap-4">
+              <div key={verseNum} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <h3 className="font-semibold text-red-600 mb-3">{t(`${verseNum}节`, `Verse ${verseNum}`)}</h3>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {versions.map(version => (
-                    <div key={version} className="p-3 bg-white dark:bg-gray-900 rounded shadow-sm">
+                    <div key={version} className="p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-black/5 dark:border-white/5">
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                         {getVersionLabel(version)}
                       </div>
-                      <div className="text-base">
-                        {verseData[verseNum]?.[version] || '无内容'}
+                      <div className="text-base leading-7">
+                        {verseData[verseNum]?.[version] || t('无内容', 'No content')}
                       </div>
                     </div>
                   ))}
@@ -304,6 +332,7 @@ const ParallelBibleView: React.FC<ParallelBibleViewProps> = ({
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
     </div>

@@ -4,8 +4,9 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { LocaleProvider } from "@/components/LocaleProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,26 +23,24 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className={inter.className}>
-        <Header />
-        <Navigation />
-        <div className="ym-wrapper ym-noprint">
-          <div className="ym-wbox">
-            <div className="ym-grid">
-              <div className="ym-g62 ym-gl breadCrumbs">
-                <Link href="/">Home</Link> / <Link href="/bibles">Bibles</Link> /
+        <LocaleProvider>
+          <Header />
+          <Navigation />
+          <div className="site-utility-bar ym-noprint">
+            <div className="ym-wrapper utility-inner">
+              <Breadcrumbs />
+              <ThemeToggle />
+            </div>
+          </div>
+          <main id="main" className="ym-clearfix" role="main">
+            <div className="ym-wrapper">
+              <div className="ym-wbox">
+                {children}
               </div>
             </div>
-            <ThemeToggle />
-          </div>
-        </div>
-        <div id="main" className="ym-clearfix" role="main">
-          <div className="ym-wrapper">
-            <div className="ym-wbox">
-              {children}
-            </div>
-          </div>
-        </div>
-        <Footer />
+          </main>
+          <Footer />
+        </LocaleProvider>
       </body>
     </html>
   );

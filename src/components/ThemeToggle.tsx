@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import LocaleSwitcher from '@/components/LocaleSwitcher';
 
 const ThemeToggle = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -62,30 +63,23 @@ const ThemeToggle = () => {
   };
 
   return (
-    <div className="ym-noprint shareright">
+    <div className="ym-noprint theme-toggle-group">
+      <LocaleSwitcher />
       {darkMode ? (
-        <span className="fa-stack color-mode__btn light--hidden">
-          <a title="Light mode" onClick={toggleDarkMode} style={{ cursor: 'pointer' }}>
+        <button type="button" className="theme-toggle-button" title="Light mode" onClick={toggleDarkMode}>
             <i className="fas fa-sun"></i>
-          </a>
-        </span>
+          </button>
       ) : (
-        <span className="fa-stack color-mode__btn dark--hidden">
-          <a title="Dark mode" onClick={toggleDarkMode} style={{ cursor: 'pointer' }}>
+        <button type="button" className="theme-toggle-button" title="Dark mode" onClick={toggleDarkMode}>
             <i className="fas fa-moon"></i>
-          </a>
-        </span>
+          </button>
       )}
-      <span className="fa-stack text-decrease">
-        <a title="Decrease font size" onClick={decreaseFontSize} style={{ cursor: 'pointer' }}>
+      <button type="button" className="theme-toggle-button" title="Decrease font size" onClick={decreaseFontSize}>
           <i className="fas fa-minus"></i>
-        </a>
-      </span>
-      <span className="fa-stack text-increase">
-        <a title="Increase font size" onClick={increaseFontSize} style={{ cursor: 'pointer' }}>
+        </button>
+      <button type="button" className="theme-toggle-button" title="Increase font size" onClick={increaseFontSize}>
           <i className="fas fa-plus"></i>
-        </a>
-      </span>
+        </button>
     </div>
   );
 };
