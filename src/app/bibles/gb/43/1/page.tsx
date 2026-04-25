@@ -17,7 +17,7 @@ const JohnChapter1Page = () => {
         title="约翰福音 1 章 [Mandarin]"
       />
 
-      <div className="textBody">
+      <div className="textBody" id="printable-reading-content">
         <h3 className="text-xl font-semibold my-4">第一章</h3>
 
         <p>
@@ -77,7 +77,11 @@ const JohnChapter1Page = () => {
 
       <div className="ym-wrapper mt-8">
         <div className="ym-wbox">
-          <ShareButtons pageTitle="约翰福音 - 第1章" />
+          <ShareButtons
+            pageTitle="约翰福音 - 第1章"
+            printTargetId="printable-reading-content"
+            printDocumentTitle="约翰福音 第1章"
+          />
         </div>
       </div>
     </div>

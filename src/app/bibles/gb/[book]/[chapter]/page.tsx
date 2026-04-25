@@ -50,7 +50,7 @@ export default async function BibleChapterPage(
         />
       </section>
 
-      <section className="panel-card p-6 md:p-8">
+      <section className="panel-card p-6 md:p-8" id="printable-reading-content">
         <div className="reader-heading">
           <h2 className="text-2xl font-semibold">第{resolvedParams.chapter}章</h2>
           <p className="faded">经文内容保持不变，仅优化阅读版式与移动端排版。</p>
@@ -83,7 +83,11 @@ export default async function BibleChapterPage(
 
       <section className="panel-card p-4 md:p-5">
         <div className="ym-wbox">
-          <ShareButtons pageTitle={`${book.name} - 第${resolvedParams.chapter}章`} />
+          <ShareButtons
+            pageTitle={`${book.name} - 第${resolvedParams.chapter}章`}
+            printTargetId="printable-reading-content"
+            printDocumentTitle={`${book.name} 第${resolvedParams.chapter}章`}
+          />
         </div>
       </section>
     </div>

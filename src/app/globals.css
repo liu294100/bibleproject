@@ -556,18 +556,22 @@ a {
   justify-content: center;
 }
 
+.shareright .fa-stack button,
 .shareright .fa-stack a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
+  border: 0;
   border-radius: 999px;
   background: white;
   color: var(--foreground);
   box-shadow: 0 10px 24px rgba(35, 35, 33, 0.08);
+  cursor: pointer;
 }
 
+.shareright .fa-stack button:hover,
 .shareright .fa-stack a:hover {
   color: var(--primary);
 }
