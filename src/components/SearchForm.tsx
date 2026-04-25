@@ -3,22 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Converter } from 'opencc-js';
-
-// Initialize OpenCC converters
-const simplifiedToTraditional = Converter({ from: 'cn', to: 'tw' });
-const traditionalToSimplified = Converter({ from: 'tw', to: 'cn' });
-
-
-
-// 简繁转换函数 - using OpenCC
-const convertText = (text: string, direction: 'toTraditional' | 'toSimplified'): string => {
-  if (direction === 'toTraditional') {
-    return simplifiedToTraditional(text);
-  } else {
-    return traditionalToSimplified(text);
-  }
-};
 
 // Types
 interface VerseData {
@@ -121,6 +105,39 @@ const SearchForm = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [convertText, setConvertText] = useState<(text: string, direction: 'toTraditional' | 'toSimplified') => string>(
+    () => (text: string) => text
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadOpenCC = async () => {
+      try {
+        const { Converter } = await import('opencc-js');
+        const simplifiedToTraditional = Converter({ from: 'cn', to: 'tw' });
+        const traditionalToSimplified = Converter({ from: 'tw', to: 'cn' });
+
+        if (!mounted) {
+          return;
+        }
+
+        setConvertText(() => (text: string, direction: 'toTraditional' | 'toSimplified') => (
+          direction === 'toTraditional'
+            ? simplifiedToTraditional(text)
+            : traditionalToSimplified(text)
+        ));
+      } catch (error) {
+        console.warn('OpenCC load failed, fallback to original text.', error);
+      }
+    };
+
+    loadOpenCC();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const searchBible = useCallback(async (searchQuery: string) => {
     const normalizedQuery = searchQuery.trim();
@@ -258,7 +275,7 @@ const SearchForm = () => {
     } finally {
       setLoading(false);
     }
-  }, [version]);
+  }, [version, convertText]);
   
 
   useEffect(() => {

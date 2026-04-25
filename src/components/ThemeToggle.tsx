@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Minus, Moon, Plus, Sun } from 'lucide-react';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { useLocale } from '@/components/LocaleProvider';
 
 const ThemeToggle = () => {
+  const { t } = useLocale();
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [fontSize, setFontSize] = useState<number>(16);
 
@@ -66,20 +69,44 @@ const ThemeToggle = () => {
     <div className="ym-noprint theme-toggle-group">
       <LocaleSwitcher />
       {darkMode ? (
-        <button type="button" className="theme-toggle-button" title="Light mode" onClick={toggleDarkMode}>
-            <i className="fas fa-sun"></i>
-          </button>
+        <button
+          type="button"
+          className="theme-toggle-button"
+          title={t('浅色模式 / Light mode', 'Light mode / 浅色模式')}
+          aria-label={t('切换到浅色模式', 'Switch to light mode')}
+          onClick={toggleDarkMode}
+        >
+          <Sun size={16} strokeWidth={2} />
+        </button>
       ) : (
-        <button type="button" className="theme-toggle-button" title="Dark mode" onClick={toggleDarkMode}>
-            <i className="fas fa-moon"></i>
-          </button>
+        <button
+          type="button"
+          className="theme-toggle-button"
+          title={t('深色模式 / Dark mode', 'Dark mode / 深色模式')}
+          aria-label={t('切换到深色模式', 'Switch to dark mode')}
+          onClick={toggleDarkMode}
+        >
+          <Moon size={16} strokeWidth={2} />
+        </button>
       )}
-      <button type="button" className="theme-toggle-button" title="Decrease font size" onClick={decreaseFontSize}>
-          <i className="fas fa-minus"></i>
-        </button>
-      <button type="button" className="theme-toggle-button" title="Increase font size" onClick={increaseFontSize}>
-          <i className="fas fa-plus"></i>
-        </button>
+      <button
+        type="button"
+        className="theme-toggle-button"
+        title={t('缩小字号 / Decrease font size', 'Decrease font size / 缩小字号')}
+        aria-label={t('缩小字号', 'Decrease font size')}
+        onClick={decreaseFontSize}
+      >
+        <Minus size={16} strokeWidth={2} />
+      </button>
+      <button
+        type="button"
+        className="theme-toggle-button"
+        title={t('放大字号 / Increase font size', 'Increase font size / 放大字号')}
+        aria-label={t('放大字号', 'Increase font size')}
+        onClick={increaseFontSize}
+      >
+        <Plus size={16} strokeWidth={2} />
+      </button>
     </div>
   );
 };

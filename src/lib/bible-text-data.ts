@@ -77,16 +77,6 @@ async function fetchBibleChapter(bookId: string, chapterNumber: number, maxRetri
   throw lastError;
 }
 
-// 动态导入本地数据
-async function importLocalChapter(bookId: string, chapterNumber: number): Promise<BibleChapter | null> {
-  try {
-    const importedData = await import(`./bible-text-data/${bookId.toLowerCase()}${chapterNumber}`);
-    return importedData[`${bookId.toLowerCase()}${chapterNumber}`];
-  } catch (error) {
-    return null;
-  }
-}
-
 // 示例数据 - 约翰福音第1章
 export const john1: BibleChapter = {
   book: '43',
@@ -159,13 +149,7 @@ export async function getBibleChapterText(bookNumber: string, chapterNumber: num
   }
 
   try {
-    // 先尝试从本地获取数据
-    const localData = await importLocalChapter(bookNumber, chapterNumber);
-    if (localData) {
-      return localData;
-    }
-
-    // 如果本地数据不存在，从API获取
+    // 当前仓库没有分章节本地数据目录，直接走接口请求与内置兜底数据。
     return await fetchBibleChapter(bookNumber, chapterNumber);
   } catch (error) {
     console.error(`获取经文失败: ${error}`);
